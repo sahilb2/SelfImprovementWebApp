@@ -110,8 +110,29 @@ def send_quote():
 	r = requests.post("http://api.forismatic.com/api/1.0/", data={"method": "getQuote", "format" : "text", 'key': 111, "lang": 'en'})
 	for email in emails:
 		send_mail(r.text, "Quote of the Day", email)
-	send_msg(r.text)
-	return "done"
+	try:
+		send_msg(r.text)
+	except Exception as ex:
+		return str(ex)
+@app.route("/send/message", methods=['GET', 'POST'])
+def send_message():
+    if request.method == "POST":
+		subject = request.form['subject']
+		message = request.form['message']
+		dbase = sqlite3.connect('Accounts.db')
+		cur = dbase.cursor()
+		cur.execute("SELECT * FROM Accounts")
+		rows = cur.fetchall()
+		emails = []
+		for row in rows:
+			emails.append(row[5])
+		headline = getnews()
+		for email in emails:
+			send_mail(message, subject, email)
+		send_msg(message)
+		return "done"
+
+    
 
 @app.route("/send/news")
 def send_news():
